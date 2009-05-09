@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# wafw00f - Web Application Firewall Detection Tool
+# by Sandro Gauci - enablesecurity.com (c) 2009
+#  and Wendel G. Henrique - Trustwave 2009
 
 __license__ = """
 Copyright (c) 2009, {Sandro Gauci|Wendel G. Henrique}
@@ -27,10 +30,6 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-
-# wafw00f - Web Application Firewall Detection Tool
-# by Sandro Gauci - enablesecurity.com (c) 2009
-#  and Wendel G. Henrique - Trustwave 2009
 
 import httplib
 from urllib import quote, unquote
@@ -439,7 +438,7 @@ def calclogginglevel(verbosity):
         level = 0
     return level
 
-def xmlrpc_interface(bindaddr=('localhost',8000)):
+def xmlrpc_interface(bindaddr=('localhost',8001)):
     from SimpleXMLRPCServer import SimpleXMLRPCServer
     from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
     class RequestHandler(SimpleXMLRPCRequestHandler):
@@ -508,6 +507,8 @@ def main():
                       default=False,help='List all WAFs that we are able to detect')
     parser.add_option('--xmlrpc',dest='xmlrpc', action='store_true',
                       default=False,help='Switch on the XML-RPC interface instead of CUI')
+    parser.add_option('--xmlrpcport',dest='xmlrpcport', type='int',
+                      default=8001,help='Specify an alternative port to listen on, default 8001')
     parser.add_option('--version','-V',dest='version', action='store_true',
                       default=False,help='Print out the version')
     options,args = parser.parse_args()
@@ -523,7 +524,7 @@ def main():
         return
     elif options.xmlrpc:
         print "Starting XML-RPC interface"
-        xmlrpc_interface()
+        xmlrpc_interface(bindaddr=('localhost',options.xmlrpcport))
         return
     if len(args) == 0:
         parser.error("we need a target site")
