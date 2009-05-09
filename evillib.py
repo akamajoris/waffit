@@ -321,3 +321,14 @@ class waftoolsengine:
                             else:
                                 self.log.warn('%s is not a well formatted url' % response.getheader('location'))
         return r
+
+def scrambledheader(header):
+    c = 'connection'
+    if len(header) != len(c):
+        return False
+    if header == c:
+        return False
+    for character in c:
+        if c.count(character) != header.count(character):
+            return False
+    return True

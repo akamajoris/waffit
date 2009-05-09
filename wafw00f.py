@@ -117,7 +117,8 @@ class WafW00F(waftoolsengine):
         reasons = ['Blocking is being done at connection/packet level.',
                    'The server header is different when an attack is detected.',
                    'The server returned a different response code when a string trigged the blacklist.',
-                   'It closed the connection for a normal request.'
+                   'It closed the connection for a normal request.',
+                   'The connection header was scrambled.'
                    ]
         # test if response for a path containing html tags with known evil strings
         # gives a different response from another containing invalid html tags
@@ -185,6 +186,18 @@ class WafW00F(waftoolsengine):
                 self.knowledge['generic']['reason'] = reasons[0]
                 self.knowledge['generic']['found'] = True
                 return True
+        for attack in self.attacks:
+            r = attack(self)
+            if r is None:                
+                self.knowledge['generic']['reason'] = reasons[0]
+                self.knowledge['generic']['found'] = True
+                return True
+            response, responsebody = r
+            for h,v in response.getheaders():
+                if scrambledheader(h):
+                    self.knowledge['generic']['reason'] = reasons[4]
+                    self.knowledge['generic']['found'] = True
+                    return True
         return False
 
     def matchheader(self,headermatch,attack=False,ignorecase=True):
@@ -544,13 +557,13 @@ def main():
         if len(waf) > 0:
             print 'The site %s is behind a %s' % (target, ' and/or '.join( waf))
         if (options.findall) or len(waf) == 0:
+            print 'Generic Detection results:'          
             if attacker.genericdetect():                
-                log.info('Generic Detection: %s' % attacker.knowledge['generic']['reason'])
-                print 'Generic Detection results:'                
-                print 'The site %s seems to be behind a WAF but we were not able to identify the vendor' % target
+                log.info('Generic Detection: %s' % attacker.knowledge['generic']['reason'])                    
+                print 'The site %s seems to be behind a WAF ' % target
                 print 'Reason: %s' % attacker.knowledge['generic']['reason']
             else:
-                print 'No WAF detected'
+                print 'No WAF detected by the generic detection'
         print 'Number of requests: %s' % attacker.requestnumber
 
 if __name__ == '__main__':
