@@ -123,7 +123,7 @@ class WafW00F(waftoolsengine):
         # gives a different response from another containing invalid html tags
         r = self.cleanhtml()
         if r is None:
-            self.knowledge['generic']['reason'] = reasons[3]
+            self.knowledge['generic']['reason'] = reasons[0]
             self.knowledge['generic']['found'] = True
             return True
         cleanresponse,_tmp =r
