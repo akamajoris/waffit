@@ -438,51 +438,52 @@ def calclogginglevel(verbosity):
         level = 0
     return level
 
+class wafwoof_api:
+    def __init__(self):
+        self.cache = dict()
+        
+    def vendordetect(self,url,findall=False):            
+        if self.cache.has_key(url):
+            wafw00f = self.cache[url]
+        else:
+            (hostname,port,path,query,ssl) = oururlparse(url)
+            wafw00f = WafW00F(target=hostname,port=80,path=path,ssl=ssl)
+            self.cache[url] = wafw00f
+        return wafw00f.identwaf(findall=findall)
+    
+    def genericdetect(self,url):            
+        if self.cache.has_key(url):
+            wafw00f = self.cache[url]
+        else:
+            (hostname,port,path,query,ssl) = oururlparse(url)
+            wafw00f = WafW00F(target=hostname,port=80,path=path,ssl=ssl)
+            self.cache[url] = wafw00f
+        wafw00f.genericdetect()
+        return wafw00f.knowledge['generic']
+        
+    def alltests(self,url,findall=False):
+        if self.cache.has_key(url):
+            wafw00f = self.cache[url]
+        else:
+            (hostname,port,path,query,ssl) = oururlparse(url)
+            wafw00f = WafW00F(target=hostname,port=80,path=path,ssl=ssl)
+            self.cache[url] = wafw00f
+        wafw00f.identwaf(findall=findall)
+        if (len(wafw00f.knowledge['wafname']) == 0) or (findall):
+            wafw00f.genericdetect()
+        return wafw00f.knowledge
+
 def xmlrpc_interface(bindaddr=('localhost',8001)):
     from SimpleXMLRPCServer import SimpleXMLRPCServer
     from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
     class RequestHandler(SimpleXMLRPCRequestHandler):
         rpc_paths = ('/RPC2',)
     
-    class wafwoof_xmlrpc:
-        def __init__(self):
-            self.cache = dict()
-            
-        def vendordetect(self,url,findall=False):            
-            if self.cache.has_key(url):
-                wafw00f = self.cache[url]
-            else:
-                (hostname,port,path,query,ssl) = oururlparse(url)
-                wafw00f = WafW00F(target=hostname,port=80,path=path,ssl=ssl)
-                self.cache[url] = wafw00f
-            return wafw00f.identwaf(findall=findall)
-        
-        def genericdetect(self,url):            
-            if self.cache.has_key(url):
-                wafw00f = self.cache[url]
-            else:
-                (hostname,port,path,query,ssl) = oururlparse(url)
-                wafw00f = WafW00F(target=hostname,port=80,path=path,ssl=ssl)
-                self.cache[url] = wafw00f
-            wafw00f.genericdetect()
-            return wafw00f.knowledge['generic']
-            
-        def alltests(self,url,findall=False):
-            if self.cache.has_key(url):
-                wafw00f = self.cache[url]
-            else:
-                (hostname,port,path,query,ssl) = oururlparse(url)
-                wafw00f = WafW00F(target=hostname,port=80,path=path,ssl=ssl)
-                self.cache[url] = wafw00f
-            wafw00f.identwaf(findall=findall)
-            if (len(wafw00f.knowledge['wafname']) == 0) or (findall):
-                wafw00f.genericdetect()
-            return wafw00f.knowledge
         
     server = SimpleXMLRPCServer(bindaddr,
                             requestHandler=RequestHandler)
     server.register_introspection_functions()
-    server.register_instance(wafwoof_xmlrpc())
+    server.register_instance(wafwoof_api())
     try:
         server.serve_forever()
     except KeyboardInterrupt:
