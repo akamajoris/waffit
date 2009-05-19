@@ -274,6 +274,9 @@ class WafW00F(waftoolsengine):
         return detected
     
     def matchcookie(self,match):
+        """
+        a convenience function which calls matchheader
+        """
         return self.matchheader(('set-cookie',match))
     
     def isairlock(self):
@@ -318,9 +321,17 @@ class WafW00F(waftoolsengine):
         return self.matchcookie('^WODSESSION=')
     
     def isprofense(self):
+        """
+        Checks for server headers containing "profense"
+        """
         return self.matchheader(('server','profense'))
         
     def isnetscaler(self):
+        """
+        First checks if a cookie associated with Netscaler is present,
+        if not it will try to find if a "Cneonction" or "nnCoection" is returned
+        for any of the attacks sent
+        """
         if self.matchcookie('^ns_af='):
             return True        
         if self.matchheader(('Cneonction','close'),attack=True):
