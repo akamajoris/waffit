@@ -4,8 +4,9 @@ import sys
 import httplib
 import socket
 import urllib
-from urlparse import urlparse
+from urlparse import urlparse, urlunparse
 import logging
+from BeautifulSoup import BeautifulSoup
 
 __license__ = """
 Copyright (c) 2009, {Sandro Gauci|Wendel G. Henrique}
@@ -134,7 +135,7 @@ def oururlparse(target):
     log = logging.getLogger('urlparser')
     ssl = False
     o = urlparse(target)    
-    if o[0] not in ['http','https']:
+    if o[0] not in ['http','https','']:
         log.error('scheme %s not supported' % o.scheme)
         return
     if o[0] == 'https':
@@ -242,6 +243,7 @@ class waftoolsengine:
         self.path = path
         self.redirectno = 0
         self.followredirect = followredirect
+        self.crawlpaths = list()
 
     def request(self,method='GET',path=None,usecache=True,
                 cacheresponse=True, headers=None,
@@ -266,7 +268,7 @@ class waftoolsengine:
         if not 'accept-charset' in knownheaders:
             headers['Accept-Charset'] = 'ISO-8859-1,utf-8;q=0.7,*;q=0.7'
         if not 'accept' in knownheaders:
-            headers['Accept'] = '*'
+            headers['Accept'] = '*/*'
         k = str([method,path,headers])
         if usecache:                
             if self.cachedresponses.has_key(k):
@@ -303,24 +305,79 @@ class waftoolsengine:
         if cacheresponse:
             self.cachedresponses[k] = r
         if r:
-            if response.status in [301,302,307]:
-                if followredirect:
-                    if response.getheader('location'):
-                        newloc = response.getheader('location')
-                        if newloc.startswith('http'):
-                            self.log.info('Redirected to %s' % newloc)                    
-                            pret = oururlparse(newloc)
-                            if pret is not None:
-                                (target,port,path,query,ssl) = pret
-                                if not port: port = 80
-                                if (target,port,ssl) == (self.target,self.port,ssl):
-                                    self.request(method,path,usecache,cacheresponse,
-                                                 headers,comingfromredir=True)
-                                else:
-                                    self.log.warn('Tried to redirect to a different server %s' % newloc)
-                            else:
-                                self.log.warn('%s is not a well formatted url' % response.getheader('location'))
+            if response.status in [301,302,307]:                
+                if followredirect:                    
+                    if response.getheader('location'):                        
+                        newloc = response.getheader('location')                                            
+                        self.log.info('Redirected to %s' % newloc)                    
+                        pret = oururlparse(newloc)
+                        if pret is not None:
+                            (target,port,path,query,ssl) = pret                            
+                            if not port: port = 80
+                            if target == '':
+                                target = self.target
+                            if port is None:
+                                port = self.port
+                            if not path.startswith('/'):
+                                path = '/'+path
+                            if (target,port,ssl) == (self.target,self.port,ssl):
+                                r = self.request(method,path,usecache,cacheresponse,
+                                             headers,comingfromredir=True)
+                            else:                                
+                                self.log.warn('Tried to redirect to a different server %s' % newloc)
+                        else:
+                            self.log.warn('%s is not a well formatted url' % response.getheader('location'))
         return r
+
+
+    def querycrawler(self,path=None,curdepth=0,maxdepth=1):
+        self.log.debug('Crawler is visiting %s' % path)
+        localcrawlpaths = list()        
+        if curdepth > maxdepth:
+            self.log.info('maximum depth %s reached' % maxdepth)
+            return
+        r = self.request(path=path)
+        if r is None:
+            return
+        response, responsebody = r                
+        try:
+            soup=BeautifulSoup(responsebody)
+        except:
+            self.log.warn('could not parse the response body')
+            return
+        tags = soup('a')
+        for tag in tags:
+            try:
+                href = tag["href"]
+                if href is not None:
+                    tmpu = urlparse(href)                    
+                    if (tmpu[1] != '') and (self.target != tmpu[1]):
+                        # not on the same domain name .. ignore
+                        self.log.debug('Ignoring link because it is not on the same site %s' % href)
+                        continue
+                    if tmpu[0] not in ['http','https','']:
+                        self.log.debug('Ignoring link because it is not an http uri %s' % href)
+                        continue
+                    path = tmpu[2]
+                    if not path.startswith('/'):
+                        path = '/'+path
+                    if len(tmpu[4]) > 0:
+                        # found a query .. thats all we need                                                
+                        location = urlunparse(('','',path,tmpu[3],tmpu[4],''))
+                        self.log.info('Found query %s' % location)
+                        return href                    
+                    if path not in self.crawlpaths:
+                        href = urllib.unquote(path)
+                        self.log.debug('adding %s for crawling' % href)
+                        self.crawlpaths.append(href)
+                        localcrawlpaths.append(href)
+            except KeyError:
+                pass
+        for nextpath in localcrawlpaths:            
+            r = self.querycrawler(path=nextpath,curdepth=curdepth+1,maxdepth=maxdepth)
+            if r:
+                return r
+
 
 def scrambledheader(header):
     c = 'connection'
@@ -332,3 +389,4 @@ def scrambledheader(header):
         if c.count(character) != header.count(character):
             return False
     return True
+

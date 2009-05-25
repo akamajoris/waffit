@@ -56,13 +56,16 @@ lackofart = """
     By Sandro Gauci && Wendel G. Henrique
 """
 
-xssstring = '<script>alert(1)</script>'
-dirtravstring = '../../../../etc/passwd'
-cleanhtml = '<invalid>hello'
-
-
 
 class WafW00F(waftoolsengine):
+    """
+    WAF detection tool
+    """
+    
+    xssstring = '<script>alert(1)</script>'
+    dirtravstring = '../../../../etc/passwd'
+    cleanhtmlstring = '<invalid>hello'
+    
     def __init__(self,target='www.microsoft.com',port=80,ssl=False,
                  debuglevel=0,path='/',followredirect=True):
         """
@@ -86,22 +89,22 @@ class WafW00F(waftoolsengine):
         return self.request(method='OHYEA',usecache=usecache,cacheresponse=cacheresponse)
     
     def directorytraversal(self,usecache=True,cacheresponse=True):
-        return self.request(path=self.path+dirtravstring,usecache=usecache,cacheresponse=cacheresponse)
+        return self.request(path=self.path+self.dirtravstring,usecache=usecache,cacheresponse=cacheresponse)
         
     def cleanhtmlencoded(self,usecache=True,cacheresponse=True):
-        string = self.path + quote(cleanhtml) + '.html'
+        string = self.path + quote(self.cleanhtmlstring) + '.html'
         return self.request(path=string,usecache=usecache,cacheresponse=cacheresponse)
 
     def cleanhtml(self,usecache=True,cacheresponse=True):
-        string = self.path + cleanhtml + '.html'
+        string = self.path + self.cleanhtmlstring + '.html'
         return self.request(path=string,usecache=usecache,cacheresponse=cacheresponse)
         
     def xssstandard(self,usecache=True,cacheresponse=True):
-        xssstringa = self.path + xssstring + '.html'
+        xssstringa = self.path + self.xssstring + '.html'
         return self.request(path=xssstringa,usecache=usecache,cacheresponse=cacheresponse)
     
     def xssstandardencoded(self,usecache=True,cacheresponse=True):
-        xssstringa = self.path + quote(xssstring) + '.html'
+        xssstringa = self.path + quote(self.xssstring) + '.html'
         return self.request(path=xssstringa,usecache=usecache,cacheresponse=cacheresponse)
     
     def cmddotexe(self,usecache=True,cacheresponse=True):
