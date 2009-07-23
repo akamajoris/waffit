@@ -321,8 +321,8 @@ class WafW00F(waftoolsengine):
             if r is None:
                 return
             response, responsebody = r
-            if resp.status == 403:
-                if resp.reason == "Forbidden":
+            if response.status == 403:
+                if response.reason == "Forbidden":
                     detected = True
         return detected
         
