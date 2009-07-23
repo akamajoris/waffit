@@ -308,6 +308,7 @@ class WafW00F(waftoolsengine):
         if response.status == 200:
             if response.reason == 'Condition Intercepted':
                 return True
+        return False
     
     def isbeeware(self):
         # credit goes to Sebastien Gioria
