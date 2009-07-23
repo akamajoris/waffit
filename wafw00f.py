@@ -30,7 +30,7 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-
+import os
 import httplib
 from urllib import quote, unquote
 import urllib2
@@ -38,7 +38,12 @@ from optparse import OptionParser
 import logging
 import socket
 import sys
-from evillib import *
+
+currentDir = os.getcwd()
+scriptDir = os.path.dirname(sys.argv[0]) or '.'
+os.chdir( scriptDir )
+
+from libs.evillib import *
 
 __version__ = '0.9.0'
 
@@ -292,7 +297,34 @@ class WafW00F(waftoolsengine):
     
     def isdenyall(self):
         # credit goes to W3AF
-        return self.matchcookie('^sessioncookie=')
+        if self.matchcookie('^sessioncookie='):
+            return True
+        # credit goes to Sebastien Gioria
+        #   Tested against a Rweb 3.8
+        r = self.xssstandard()
+        if r is None:
+            return
+        response, responsebody = r
+        if response.status == 200:
+            if response.reason == 'Condition Intercepted':
+                return True
+    
+    def isbeeware(self):
+        # credit goes to Sebastien Gioria
+        detected = False
+        r = self.xssstandard()
+        if r is None:
+            return
+        response, responsebody = r
+        if (response.status != 200) or (response.reason == 'Forbidden'):
+            r = self.directorytraversal()
+            if r is None:
+                return
+            response, responsebody = r
+            if resp.status == 403:
+                if resp.reason == "Forbidden":
+                    detected = True
+        return detected
         
     def isf5asm(self):
         # credit goes to W3AF
@@ -424,15 +456,16 @@ class WafW00F(waftoolsengine):
     wafdetections['WebKnight'] = iswebknight    
     wafdetections['URLScan'] = isurlscan
     wafdetections['SecureIIS'] = issecureiis
-    wafdetections['dotDefender'] = isdotdefender    
-    wafdetections['ModSecurity (positive model)'] = ismodsecuritypositive
+    wafdetections['dotDefender'] = isdotdefender
+    wafdetections['BeeWare'] = isbeeware
+    # wafdetections['ModSecurity (positive model)'] = ismodsecuritypositive removed for now 
     wafdetectionsprio = ['Profense','DenyALL','NetContinuum',                         
                          'Barracuda','HyperGuard','BinarySec','Teros',
                          'F5 Trafficshield','F5 ASM','Airlock','Citrix NetScaler',
                          'ModSecurity',
-                         'dotDefender','webApp.secure', 'ModSecurity (positive model)',                         
+                         'dotDefender','webApp.secure', # removed for now 'ModSecurity (positive model)',                         
                          'BIG-IP','URLScan','WebKnight', 
-                         'SecureIIS']
+                         'SecureIIS','BeeWare']
     
     def identwaf(self,findall=False):
         detected = list()
