@@ -136,7 +136,7 @@ def oururlparse(target):
     ssl = False
     o = urlparse(target)    
     if o[0] not in ['http','https','']:
-        log.error('scheme %s not supported' % o.scheme)
+        log.error('scheme %s not supported' % o[0])
         return
     if o[0] == 'https':
         ssl = True
