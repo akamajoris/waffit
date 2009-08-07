@@ -496,7 +496,7 @@ class wafwoof_api:
         else:
             r = oururlparse(url)
             if r is None:
-                return ''
+                return ['']
             (hostname,port,path,query,ssl) = r
             wafw00f = WafW00F(target=hostname,port=80,path=path,ssl=ssl)
             self.cache[url] = wafw00f
@@ -508,7 +508,7 @@ class wafwoof_api:
         else:
             r = oururlparse(url)
             if r is None:
-                return ''
+                return {}
             (hostname,port,path,query,ssl) = r
             wafw00f = WafW00F(target=hostname,port=80,path=path,ssl=ssl)
             self.cache[url] = wafw00f
@@ -521,7 +521,7 @@ class wafwoof_api:
         else:
             r = oururlparse(url)
             if r is None:
-                return ''
+                return {}
             (hostname,port,path,query,ssl)  = r
             wafw00f = WafW00F(target=hostname,port=80,path=path,ssl=ssl)
             self.cache[url] = wafw00f
