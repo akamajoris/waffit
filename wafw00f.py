@@ -301,13 +301,15 @@ class WafW00F(waftoolsengine):
             return True
         # credit goes to Sebastien Gioria
         #   Tested against a Rweb 3.8
-        r = self.xssstandard()
-        if r is None:
-            return
-        response, responsebody = r
-        if response.status == 200:
-            if response.reason == 'Condition Intercepted':
-                return True
+        # and modified by sandro gauci and someone else
+        for attack in self.attacks:
+            r = attack(self)
+            if r is None:
+                return
+            response, responsebody = r
+            if response.status == 200:
+                if response.reason == 'Condition Intercepted':
+                    return True
         return False
     
     def isbeeware(self):
@@ -460,10 +462,10 @@ class WafW00F(waftoolsengine):
     wafdetections['dotDefender'] = isdotdefender
     wafdetections['BeeWare'] = isbeeware
     # wafdetections['ModSecurity (positive model)'] = ismodsecuritypositive removed for now 
-    wafdetectionsprio = ['Profense','DenyALL','NetContinuum',                         
+    wafdetectionsprio = ['Profense','NetContinuum',                         
                          'Barracuda','HyperGuard','BinarySec','Teros',
                          'F5 Trafficshield','F5 ASM','Airlock','Citrix NetScaler',
-                         'ModSecurity',
+                         'ModSecurity', 'DenyALL',
                          'dotDefender','webApp.secure', # removed for now 'ModSecurity (positive model)',                         
                          'BIG-IP','URLScan','WebKnight', 
                          'SecureIIS','BeeWare']
@@ -530,9 +532,13 @@ class wafwoof_api:
             wafw00f.genericdetect()
         return wafw00f.knowledge
 
+
+
+
 def xmlrpc_interface(bindaddr=('localhost',8001)):
     from SimpleXMLRPCServer import SimpleXMLRPCServer
     from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
+    
     class RequestHandler(SimpleXMLRPCRequestHandler):
         rpc_paths = ('/RPC2',)
     
