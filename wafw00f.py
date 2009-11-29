@@ -420,7 +420,7 @@ class WafW00F(waftoolsengine):
         return self.matchheader(['X-dotDefender-denied', '^1$'],attack=True)
 
     def isimperva(self):
-        # thanks to Mathieu Dessus for this
+        # thanks to Mathieu Dessus <mathieu.dessus(a)verizonbusiness.com> for this
         # might lead to false positives so please report back to sandro@enablesecurity.com
         for attack in self.attacks:
             r = attack(self)
