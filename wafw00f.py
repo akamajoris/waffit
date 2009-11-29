@@ -418,6 +418,18 @@ class WafW00F(waftoolsengine):
     def isdotdefender(self):
         # thanks to j0e
         return self.matchheader(['X-dotDefender-denied', '^1$'],attack=True)
+
+    def isimperva(self):
+        # thanks to Mathieu Dessus for this
+        # might lead to false positives so please report back to sandro@enablesecurity.com
+        for attack in self.attacks:
+            r = attack(self)
+            if r is None:
+                return
+            response, responsebody = r
+            if response.version == 10:
+                return True
+        return False
     
     def ismodsecuritypositive(self):
         import random
@@ -461,14 +473,15 @@ class WafW00F(waftoolsengine):
     wafdetections['SecureIIS'] = issecureiis
     wafdetections['dotDefender'] = isdotdefender
     wafdetections['BeeWare'] = isbeeware
-    # wafdetections['ModSecurity (positive model)'] = ismodsecuritypositive removed for now 
+    # wafdetections['ModSecurity (positive model)'] = ismodsecuritypositive removed for now
+    wafdetections['Imperva'] = isimperva
     wafdetectionsprio = ['Profense','NetContinuum',                         
                          'Barracuda','HyperGuard','BinarySec','Teros',
                          'F5 Trafficshield','F5 ASM','Airlock','Citrix NetScaler',
                          'ModSecurity', 'DenyALL',
                          'dotDefender','webApp.secure', # removed for now 'ModSecurity (positive model)',                         
                          'BIG-IP','URLScan','WebKnight', 
-                         'SecureIIS','BeeWare']
+                         'SecureIIS','BeeWare','Imperva']
     
     def identwaf(self,findall=False):
         detected = list()
