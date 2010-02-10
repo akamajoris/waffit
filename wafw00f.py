@@ -313,6 +313,7 @@ class WafW00F(waftoolsengine):
         return False
     
     def isbeeware(self):
+        # disabled cause it was giving way too many false positives
         # credit goes to Sebastien Gioria
         detected = False
         r = self.xssstandard()
@@ -472,7 +473,7 @@ class WafW00F(waftoolsengine):
     wafdetections['URLScan'] = isurlscan
     wafdetections['SecureIIS'] = issecureiis
     wafdetections['dotDefender'] = isdotdefender
-    wafdetections['BeeWare'] = isbeeware
+    #wafdetections['BeeWare'] = isbeeware
     # wafdetections['ModSecurity (positive model)'] = ismodsecuritypositive removed for now
     wafdetections['Imperva'] = isimperva
     wafdetectionsprio = ['Profense','NetContinuum',                         
@@ -481,7 +482,7 @@ class WafW00F(waftoolsengine):
                          'ModSecurity', 'DenyALL',
                          'dotDefender','webApp.secure', # removed for now 'ModSecurity (positive model)',                         
                          'BIG-IP','URLScan','WebKnight', 
-                         'SecureIIS','BeeWare','Imperva']
+                         'SecureIIS','Imperva']
     
     def identwaf(self,findall=False):
         detected = list()
