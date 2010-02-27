@@ -372,8 +372,10 @@ class WafW00F(waftoolsengine):
         for any of the attacks sent
         """
         # NSC_ and citrix_ns_id come from David S. Langlands <dsl 'at' surfstar.com>
-        if self.matchcookie('^(ns_af|citrix_ns_id|NSC_)='):
-            return True        
+        if self.matchcookie('^(ns_af|citrix_ns_id)='):
+            return True
+        if self.matchcookie('^NSC_'):
+            return True
         if self.matchheader(('Cneonction','close'),attack=True):
             return True
         if self.matchheader(('nnCoection','close'),attack=True):
