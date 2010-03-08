@@ -287,7 +287,8 @@ class waftoolsengine:
             else:
                 h = httplib.HTTPConnection(self.target,self.port)
         if self.debuglevel <= 10:
-            h.set_debuglevel(self.debuglevel)
+            if self.debuglevel > 1:
+                h.set_debuglevel(self.debuglevel)
         try:
             h.request(method,path,headers=headers)
         except socket.error:

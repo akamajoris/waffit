@@ -591,7 +591,7 @@ def main():
     parser.add_option('--version','-V',dest='version', action='store_true',
                       default=False,help='Print out the version')
     options,args = parser.parse_args()
-    logging.basicConfig(level=calclogginglevel(options.verbose))
+    logging.basicConfig(level=calclogginglevel(options.verbose+1))
     log = logging.getLogger()
     if options.list:
         print "Can test for these WAFs:\r\n"
