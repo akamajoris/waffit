@@ -290,6 +290,7 @@ class waftoolsengine:
             if self.debuglevel > 1:
                 h.set_debuglevel(self.debuglevel)
         try:
+            self.log.info('Sending %s %s' % (method,path))
             h.request(method,path,headers=headers)
         except socket.error:
             self.log.warn('Could not initialize connection to %s' % self.target)
