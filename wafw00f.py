@@ -515,7 +515,7 @@ class wafwoof_api:
             if r is None:
                 return ['']
             (hostname,port,path,query,ssl) = r
-            wafw00f = WafW00F(target=hostname,port=80,path=path,ssl=ssl)
+            wafw00f = WafW00F(target=hostname,port=port,path=path,ssl=ssl)
             self.cache[url] = wafw00f
         return wafw00f.identwaf(findall=findall)
     
@@ -527,7 +527,7 @@ class wafwoof_api:
             if r is None:
                 return {}
             (hostname,port,path,query,ssl) = r
-            wafw00f = WafW00F(target=hostname,port=80,path=path,ssl=ssl)
+            wafw00f = WafW00F(target=hostname,port=port,path=path,ssl=ssl)
             self.cache[url] = wafw00f
         wafw00f.genericdetect()
         return wafw00f.knowledge['generic']
@@ -540,7 +540,7 @@ class wafwoof_api:
             if r is None:
                 return {}
             (hostname,port,path,query,ssl)  = r
-            wafw00f = WafW00F(target=hostname,port=80,path=path,ssl=ssl)
+            wafw00f = WafW00F(target=hostname,port=port,path=path,ssl=ssl)
             self.cache[url] = wafw00f
         wafw00f.identwaf(findall=findall)
         if (len(wafw00f.knowledge['wafname']) == 0) or (findall):
