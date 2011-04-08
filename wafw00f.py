@@ -38,6 +38,7 @@ from optparse import OptionParser
 import logging
 import socket
 import sys
+import random
 
 currentDir = os.getcwd()
 scriptDir = os.path.dirname(sys.argv[0]) or '.'
@@ -67,9 +68,11 @@ class WafW00F(waftoolsengine):
     WAF detection tool
     """
     
+    AdminFolder = '/Admin_Files/'
     xssstring = '<script>alert(1)</script>'
     dirtravstring = '../../../../etc/passwd'
     cleanhtmlstring = '<invalid>hello'
+    isaservermatch = 'Forbidden ( The server denied the specified Uniform Resource Locator (URL). Contact the server administrator.  )'
     
     def __init__(self,target='www.microsoft.com',port=80,ssl=False,
                  debuglevel=0,path='/',followredirect=True):
@@ -86,7 +89,6 @@ class WafW00F(waftoolsengine):
         return self.request(usecache=usecache,cacheresponse=cacheresponse,headers=headers)
     
     def normalnonexistentfile(self,usecache=True,cacheresponse=True):
-        import random
         path = self.path + str(random.randrange(1000,9999)) + '.html'
         return self.request(path=path,usecache=usecache,cacheresponse=cacheresponse)
     
@@ -95,6 +97,10 @@ class WafW00F(waftoolsengine):
     
     def directorytraversal(self,usecache=True,cacheresponse=True):
         return self.request(path=self.path+self.dirtravstring,usecache=usecache,cacheresponse=cacheresponse)
+        
+    def invalidhost(self,usecache=True,cacheresponse=True):
+        randomnumber = random.randrange(100000,999999)
+        return self.request(headers={'Host':str(randomnumber)})
         
     def cleanhtmlencoded(self,usecache=True,cacheresponse=True):
         string = self.path + quote(self.cleanhtmlstring) + '.html'
@@ -108,6 +114,10 @@ class WafW00F(waftoolsengine):
         xssstringa = self.path + self.xssstring + '.html'
         return self.request(path=xssstringa,usecache=usecache,cacheresponse=cacheresponse)
     
+    def protectedfolder(self,usecache=True,cacheresponse=True):
+        pfstring = self.path + self.AdminFolder
+        return self.request(path=pfstring,usecache=usecache,cacheresponse=cacheresponse)
+
     def xssstandardencoded(self,usecache=True,cacheresponse=True):
         xssstringa = self.path + quote(self.xssstring) + '.html'
         return self.request(path=xssstringa,usecache=usecache,cacheresponse=cacheresponse)
@@ -117,7 +127,7 @@ class WafW00F(waftoolsengine):
         string = self.path + 'cmd.exe'
         return self.request(path=string,usecache=usecache,cacheresponse=cacheresponse)
     
-    attacks = [cmddotexe,directorytraversal,xssstandard,xssstandardencoded]
+    attacks = [cmddotexe,directorytraversal,xssstandard,protectedfolder,xssstandardencoded]
     
     def genericdetect(self,usecache=True,cacheresponse=True):        
         reason = ''
@@ -266,6 +276,16 @@ class WafW00F(waftoolsengine):
             if response.status == 501:
                 detected = True
                 break
+        return detected
+    
+    def isisaserver(self):
+        detected = False
+        r = self.invalidhost()
+        if r is None:
+            return
+        response,responsebody = r
+        if response.reason == self.isaservermatch:
+            detected = True
         return detected
     
     def issecureiis(self):
@@ -453,10 +473,20 @@ class WafW00F(waftoolsengine):
             detected = True
         return detected
     
+    def isibm(self):
+        detected = False
+        r = self.protectedfolder()
+        if r is None:
+            detected = True
+        return detected
+
+
     wafdetections = dict()
     # easy ones
+    wafdetections['IBM Web Application Security'] = isibm
     wafdetections['Profense'] = isprofense
     wafdetections['ModSecurity'] = ismodsecurity
+    wafdetections['ISA Server'] = isisaserver
     wafdetections['NetContinuum'] = isnetcontinuum
     wafdetections['HyperGuard'] = ishyperguard
     wafdetections['Barracuda'] = isbarracuda
@@ -480,10 +510,10 @@ class WafW00F(waftoolsengine):
     wafdetectionsprio = ['Profense','NetContinuum',                         
                          'Barracuda','HyperGuard','BinarySec','Teros',
                          'F5 Trafficshield','F5 ASM','Airlock','Citrix NetScaler',
-                         'ModSecurity', 'DenyALL',
+                         'ModSecurity', 'IBM Web Application Security', 'DenyALL',
                          'dotDefender','webApp.secure', # removed for now 'ModSecurity (positive model)',                         
-                         'BIG-IP','URLScan','WebKnight', 
-                         'SecureIIS','Imperva']
+                         'BIG-IP','URLScan','WebKnight',
+                         'SecureIIS','Imperva','ISA Server']
     
     def identwaf(self,findall=False):
         detected = list()
@@ -591,7 +621,7 @@ def main():
     parser.add_option('--version','-V',dest='version', action='store_true',
                       default=False,help='Print out the version')
     options,args = parser.parse_args()
-    logging.basicConfig(level=calclogginglevel(options.verbose+1))
+    logging.basicConfig(level=calclogginglevel(options.verbose))
     log = logging.getLogger()
     if options.list:
         print "Can test for these WAFs:\r\n"
