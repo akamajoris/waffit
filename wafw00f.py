@@ -473,6 +473,14 @@ class WafW00F(waftoolsengine):
             detected = True
         return detected
     
+    def isibmdatapower(self):
+	# Added by Mathieu Dessus <mathieu.dessus(a)verizonbusiness.com> 
+	detected = False
+	if self.matchheader(('X-Backside-Transport', '^(OK|FAIL)')):
+		detected = True
+	return detected
+
+
     def isibm(self):
         detected = False
         r = self.protectedfolder()
@@ -484,6 +492,7 @@ class WafW00F(waftoolsengine):
     wafdetections = dict()
     # easy ones
     wafdetections['IBM Web Application Security'] = isibm
+    wafdetections['IBM DataPower'] = isibmdatapower
     wafdetections['Profense'] = isprofense
     wafdetections['ModSecurity'] = ismodsecurity
     wafdetections['ISA Server'] = isisaserver
@@ -510,7 +519,7 @@ class WafW00F(waftoolsengine):
     wafdetectionsprio = ['Profense','NetContinuum',                         
                          'Barracuda','HyperGuard','BinarySec','Teros',
                          'F5 Trafficshield','F5 ASM','Airlock','Citrix NetScaler',
-                         'ModSecurity', 'IBM Web Application Security', 'DenyALL',
+                         'ModSecurity', 'IBM Web Application Security', 'IBM DataPower', 'DenyALL',
                          'dotDefender','webApp.secure', # removed for now 'ModSecurity (positive model)',                         
                          'BIG-IP','URLScan','WebKnight',
                          'SecureIIS','Imperva','ISA Server']
