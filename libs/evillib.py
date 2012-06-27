@@ -134,7 +134,7 @@ homoglyphicmapping = {"'" : '%ca%bc'}
 def oururlparse(target):
     log = logging.getLogger('urlparser')
     ssl = False
-    o = urlparse(target)    
+    o = urlparse(target)
     if o[0] not in ['http','https','']:
         log.error('scheme %s not supported' % o[0])
         return

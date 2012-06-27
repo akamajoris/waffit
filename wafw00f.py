@@ -649,6 +649,9 @@ def main():
     targets = args
     for target in targets:
         print "Checking %s" % target
+        if not (target.startswith('http://') or target.startswith('https://')):
+            log.critical('The url %s should start with http:// or https:// .. skipping' % target)
+            continue
         pret = oururlparse(target)
         if pret is None:
             log.critical('The url %s is not well formed' % target)
