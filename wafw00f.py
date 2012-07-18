@@ -648,10 +648,10 @@ def main():
         parser.error("we need a target site")
     targets = args
     for target in targets:
-        print "Checking %s" % target
         if not (target.startswith('http://') or target.startswith('https://')):
-            log.critical('The url %s should start with http:// or https:// .. skipping' % target)
-            continue
+            log.info('The url %s should start with http:// or https:// .. fixing (might make this unusable)' % target)
+            target = 'http://' + target
+        print "Checking %s" % target
         pret = oururlparse(target)
         if pret is None:
             log.critical('The url %s is not well formed' % target)
