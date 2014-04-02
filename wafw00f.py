@@ -319,7 +319,12 @@ class WafW00F(waftoolsengine):
     
     def isbarracuda(self):
         # credit goes to W3AF
-        return self.matchcookie('^barra_counter_session=')
+        if self.matchcookie('^barra_counter_session='):
+            return True
+        # credit goes to Charlie Campbell 
+        if self.matchcookie('^BNI__BARRACUDA_LB_COOKIE='):
+            return True
+        return False
     
     def isdenyall(self):
         # credit goes to W3AF
