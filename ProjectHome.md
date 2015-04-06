@@ -1,0 +1,1 @@
+Check out https://github.com/sandrogauci/wafw00f for the latest version. This repository is outdated.
